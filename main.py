@@ -23,11 +23,10 @@ class ServerHandler(BaseHTTPRequestHandler): # класс запуска сер�
             with open(os.curdir + os.sep + "assets" + os.sep + self.path, 'rb') as file:
                 self.wfile.write(file.read())
 
-        elif self.path.endswith(".html"): #если запрос cодержит символ
-            self.send_response(200)  #приуспешном соединении отправит код 200
-            self.send_header('Content-type', 'text/html') # HHTP заголовки, которые будут записаны в выходной поток
-            self.end_headers() #добавляет пустую строку (обозначающую конец заголовков HTTP в ответе) в буфер заголовков и вызывает метод .flush_headers().
-                                # flush_headers() отправляет заголовки в выходной поток и очищает внутренний буфер заголовков
+        elif list_of_pages("pages", self.path):  # если запрос прошел проверку в функции
+            self.send_response(200)  # приуспешном соединении отправит код 200
+            self.send_header('Content-type', 'text/html')  # HHTP заголовки, которые будут записаны в выходной поток
+            self.end_headers()  # добавляет пустую строку (обозначающую конец заголовков HTTP в ответе) в буфер заголовков
             self.wfile.write(string_of_bytes_from_html(self.path))  # cодержит поток вывода для обратной записи ответа клиен
 
         else:
@@ -56,17 +55,20 @@ def server_thread(server_port):
         pass
     httpd.server_close()
 
-def list_of_html(directiry):
-    directiry = directiry
-    files = os.listdir(directiry)
-    print(files)
+def list_of_pages(directory, path): # функция проверки содержимого запроса
+    directory = os.listdir(directory)
+    if path[path.find("/") + 1:] in directory or path == "/": # если в теле запроса есть имя страницы из паки Pages или слеш
+        return True  # возвращаем правду
+    else:
+        return False
 
-def string_of_bytes_from_html(file_name):
-    with open(os.curdir + os.sep + "pages" + file_name, 'rb') as file:
+def string_of_bytes_from_html(reqest):
+    file_name = reqest[reqest.find("/") + 1:]  # срезаем строку запроса от слеша
+    if file_name == "":  # если получаем пустую строку в переменную загружаем имя главной страницы
+        file_name = "index.html"
+    with open(os.curdir + os.sep + "pages" + os.sep + file_name, 'rb') as file:
         string_of_bytes = b''.join(file.readlines())
         return string_of_bytes
-
-list_of_html("pages")
 
 if __name__ == '__main__':
     port = 8080
